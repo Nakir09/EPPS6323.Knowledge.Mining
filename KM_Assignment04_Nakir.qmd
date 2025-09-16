@@ -1,0 +1,227 @@
+---
+title: "Assignment 03"
+author: "Md Nakir Ahmed"
+format: html
+editor: visual
+---
+
+# 
+
+# Load Libraries and Data
+
+```{r}
+library(quanteda)
+library(quanteda.textmodels)
+library(quanteda.textplots)
+library(readr)
+library(ggplot2)
+
+summit <- read_csv("https://raw.githubusercontent.com/datageneration/datamethods/master/textanalytics/summit_11162021.csv")
+sum_twt <- summit$text
+toks <- tokens(sum_twt)
+sumtwtdfm <- dfm(toks)
+```
+
+# Latent Semantic Analysis
+
+```{r}
+sum_lsa <- textmodel_lsa(sumtwtdfm)
+summary(sum_lsa)
+```
+
+# Document-feature matrix and top hashtags
+
+```{r}
+tweet_dfm <- tokens(sum_twt, remove_punct = TRUE) %>%
+  dfm()
+tag_dfm <- dfm_select(tweet_dfm, pattern = "#*")
+toptag <- names(topfeatures(tag_dfm, 50))
+head(toptag, 10)
+```
+
+# Network Plot: Hashtags
+
+```{r}
+tag_fcm <- fcm(tag_dfm)
+topgat_fcm <- fcm_select(tag_fcm, pattern = toptag)
+textplot_network(topgat_fcm, min_freq = 50, edge_alpha = 0.8, edge_size = 5)
+```
+
+# Network Plot: Users
+
+```{r}
+user_dfm <- dfm_select(tweet_dfm, pattern = "@*")
+topuser <- names(topfeatures(user_dfm, 50))
+user_fcm <- fcm(user_dfm)
+user_fcm <- fcm_select(user_fcm, pattern = topuser)
+textplot_network(user_fcm, min_freq = 20, edge_color = "firebrick", edge_alpha = 0.8, edge_size = 5)
+```
+
+# Wordcloud: Early Inaugural Speeches
+
+```{r}
+dfm_inaug <- corpus_subset(data_corpus_inaugural, Year <= 1826) %>% 
+  tokens(remove_punct = TRUE) %>% 
+  tokens_remove(stopwords("english")) %>% 
+  dfm() %>% 
+  dfm_trim(min_termfreq = 10, verbose = FALSE)
+set.seed(100)
+textplot_wordcloud(dfm_inaug)
+```
+
+# Comparison Wordcloud by Presidents
+
+```{r}
+corpus_subset(data_corpus_inaugural, 
+              President %in% c("Biden","Trump", "Obama", "Bush")) %>%
+  tokens(remove_punct = TRUE) %>%
+  tokens_remove(stopwords("english")) %>%
+  dfm() %>%
+  dfm_group(groups = President) %>%
+  dfm_trim(min_termfreq = 5, verbose = FALSE) %>%
+  textplot_wordcloud(comparison = TRUE)
+```
+
+# Keywords-in-Context (KWIC) and X-Ray Plots
+
+```{r}
+data_corpus_inaugural_subset <- corpus_subset(data_corpus_inaugural, Year > 1949)
+kwic(tokens(data_corpus_inaugural_subset), pattern = "american") %>% textplot_xray()
+kwic(tokens(data_corpus_inaugural_subset), pattern = "trade") %>% textplot_xray()
+
+tokens_inaugural <- tokens(data_corpus_inaugural_subset)
+textplot_xray(
+  kwic(tokens_inaugural, pattern = "american"),
+  kwic(tokens_inaugural, pattern = "people"),
+  kwic(tokens_inaugural, pattern = "trade")
+)
+```
+
+------------------------------------------------------------------------
+
+# 3. Compare Biden-Xi Summit Tweets and US Presidential Inaugural Speeches
+
+The Biden-Xi summit tweets largely focus on geopolitical tensions, diplomacy, and U.S.–China relations, with frequent use of terms like “Biden,” “Xi,” “China,” and hashtags such as #uschina and #summit. The language is informal, immediate, and often emotionally charged, reflecting real-time public reaction.
+
+In contrast, U.S. presidential inaugural speeches are formal, structured reflections of national values and political priorities. While early speeches emphasized unity, liberty, and the Constitution, modern ones address broader issues like security, economy, and climate change. Despite evolving language and tone, recurring themes like democracy, nationhood, and the American people persist. Together, the datasets illustrate how public discourse and presidential rhetoric both reflect and shape national identity over time.
+
+------------------------------------------------------------------------
+
+# 4. What is Wordfish?
+
+Wordfish is an unsupervised text scaling method used to estimate the position of documents (like political speeches or tweets) along a single latent dimension, such as ideology. It analyzes word frequencies to place texts on a scale without needing predefined labels.
+
+In R, it's implemented via `textmodel_wordfish()` in the `quanteda.textmodels` package and outputs each document’s position (`theta`) and word influence (`beta`) to help interpret the underlying topic or stance.
+
+------------------------------------------------------------------------
+
+# 5. How to Compare Positions (Wordfish and Scaling Methods)
+
+To compare document positions using Wordfish and other scaling methods:
+
+-   Use `textmodel_wordfish()` to estimate `theta` for each document based on word frequencies.
+-   Visualize the positions using `plot(model$theta)` or rank documents numerically to interpret their relative stances.
+-   Compare across groups (e.g., by author or date) to reveal ideological or thematic shifts.
+-   Wordfish is ideal for **unsupervised** comparison. For **supervised** comparison (with reference categories), `textmodel_wordscores()` can be used.
+-   Complementary methods include Latent Semantic Analysis (LSA), Correspondence Analysis (CA), or topic modeling for multidimensional scaling.
+
+------------------------------------------------------------------------
+
+------------------------------------------------------------------------
+
+## 6. Exercise: Try downloading 118th Congress Congressional Hearings in Committee on Foreign Affairs?
+
+We explore U.S. government documents containing "Foreign Affairs" in the title or teaser. Since there's no dedicated `congress` field, we inspect `packageId` and apply flexible filtering.
+
+```{r}
+library(jsonlite)
+library(dplyr)
+
+# Read JSON and extract documents
+gf_list1 <- read_json("https://github.com/datageneration/datamethods/raw/refs/heads/master/webdata/govinfo-search-results-2024-10-13T07_18_29.json")
+govfiles3 <- bind_rows(gf_list1$resultSet)
+
+# Filter for Foreign Affairs
+foreign_affairs_docs <- govfiles3 %>%
+  filter(grepl("Foreign Affairs", title, ignore.case = TRUE))
+
+head(foreign_affairs_docs$title)
+```
+
+------------------------------------------------------------------------
+
+------------------------------------------------------------------------
+
+## 7. Create a corpus using government documents selected from the govinfo.gov website
+
+To avoid replicating earlier examples, we use a different Foreign Affairs-related document titled:
+
+> "A bill to establish the Office of Press Freedom, to create press freedom curriculum at the National Foreign Affairs Training Center..."
+
+This document is selected from the govinfo.gov dataset and will be downloaded and processed into a corpus.
+
+```{r}
+library(jsonlite)
+library(pdftools)
+library(quanteda)
+
+# Load metadata from JSON
+gf_list1 <- read_json("https://github.com/datageneration/datamethods/raw/refs/heads/master/webdata/govinfo-search-results-2024-10-13T07_18_29.json")
+govfiles3 <- bind_rows(gf_list1$resultSet)
+
+# Find document about Press Freedom
+doc_index <- which(grepl("Press Freedom", govfiles3$title))
+url <- govfiles3$pdfLink[doc_index]
+id <- govfiles3$index[doc_index]
+
+# Set your actual directory path
+save_dir <- "D:/UTD/Courses/Spring 2025/EPPS 6323 Knowledge Mining/assignments/KM_Assignment04/"
+
+# Create directory if it doesn't exist
+dir.create(save_dir, recursive = TRUE, showWarnings = FALSE)
+
+# Use only the first matching document (in case there are multiple)
+destfile <- paste0(save_dir, "govfiles_", id[1], ".pdf")
+
+# Download PDF
+download.file(url[1], destfile, mode = "wb")
+
+# Extract text and build corpus
+txt <- pdf_text(destfile)
+full_text <- paste(txt, collapse = "\n")
+corp <- corpus(full_text)
+
+# Tokenize and plot
+dfm_doc <- corp %>%
+  tokens(remove_punct = TRUE) %>%
+  tokens_remove(stopwords("english")) %>%
+  dfm() %>%
+  dfm_trim(min_termfreq = 3)
+
+textplot_wordcloud(dfm_doc)
+```
+
+------------------------------------------------------------------------
+
+## Additional Analysis
+
+To deepen the corpus analysis beyond the word cloud, we include:
+
+### 🔹 Top Words Bar Plot
+
+Displays the 20 most frequent terms in the document.
+
+```{r}
+topwords <- topfeatures(dfm_doc, 20)
+barplot(topwords, las = 2, col = "skyblue", main = "Top Terms in the Press Freedom Bill")
+```
+
+### 🔹 Document Summary
+
+General metadata about the corpus object.
+
+```{r}
+summary(corp)
+```
+
+------------------------------------------------------------------------

@@ -1,0 +1,174 @@
+---
+title: "Improving Text Classification with Penalized Logistic Regression"
+format: html
+editor: visual
+---
+
+## 🔍 Goal
+
+This analysis demonstrates how to **improve prediction performance** for a text classification task using TF-IDF features and a **penalized logistic regression model** (elastic net) in R.
+
+------------------------------------------------------------------------
+
+## 📥 Step 1: Load Required Libraries
+
+We load tidyverse tools for data manipulation, tidymodels for modeling, and textrecipes for text preprocessing.
+
+```{r}
+library(tidyverse)
+library(tidymodels)
+library(textrecipes)
+library(workflows)
+library(stopwords)
+```
+
+------------------------------------------------------------------------
+
+## 📄 Step 2: Load and Prepare the Data
+
+We load a labeled corpus of 200 short documents and convert the target `label` to a factor for classification. We split the data 70/30 for training and testing.
+
+```{r}
+data <- read_csv("https://raw.githubusercontent.com/datageneration/knowledgemining/refs/heads/master/data/km_sample_corpus_200.csv") %>%
+  mutate(label = factor(label))
+
+set.seed(123)
+split <- initial_split(data, prop = 0.7, strata = label)
+train_data <- training(split)
+test_data  <- testing(split)
+```
+
+------------------------------------------------------------------------
+
+## ✂️ Step 3: Text Preprocessing with TF-IDF
+
+We create a recipe to: - Tokenize the text - Remove stopwords - Keep the 500 most frequent tokens - Convert tokens into TF-IDF weighted features
+
+This enriches the feature set and improves classification performance.
+
+```{r}
+rec <- recipe(label ~ text, data = train_data) %>%
+  step_tokenize(text) %>%
+  step_stopwords(text) %>%
+  step_tokenfilter(text, max_tokens = 500) %>%
+  step_tfidf(text)
+```
+
+------------------------------------------------------------------------
+
+## 🌲 Step 4: Define Penalized Logistic Regression Model
+
+We use `multinom_reg()` from `parsnip` with `glmnet` engine to perform logistic regression with elastic net regularization. The `penalty` (λ) and `mixture` (α) parameters will be tuned.
+
+```{r}
+lr_spec <- multinom_reg(penalty = tune(), mixture = tune()) %>%
+  set_engine("glmnet") %>%
+  set_mode("classification")
+```
+
+------------------------------------------------------------------------
+
+## 🔧 Step 5: Workflow Setup
+
+We combine the recipe and model into a single workflow, which simplifies the training and tuning process.
+
+```{r}
+library(workflows)
+wf <- workflow() %>%
+  add_recipe(rec) %>%
+  add_model(lr_spec)
+```
+
+------------------------------------------------------------------------
+
+## 🔁 Step 6: Cross-Validation
+
+We perform 5-fold cross-validation to robustly estimate model performance during tuning.
+
+```{r}
+set.seed(123)
+cv_folds <- vfold_cv(train_data, v = 5, strata = label)
+```
+
+------------------------------------------------------------------------
+
+## 🎯 Step 7: Define Hyperparameter Grid
+
+We define a grid of 25 combinations by varying: - `penalty`: strength of regularization (log scale from 10\^-4 to 1) - `mixture`: 0 = ridge, 1 = lasso, in between = elastic net
+
+```{r}
+lr_grid <- grid_regular(
+  penalty(range = c(-4, 0)),
+  mixture(range = c(0, 1)),
+  levels = 5
+)
+```
+
+------------------------------------------------------------------------
+
+## 🔍 Step 8: Tune the Model
+
+We tune the model using the workflow and grid defined above. Accuracy and Kappa are used as metrics.
+
+```{r}
+set.seed(123)
+tune_results <- tune_grid(
+  wf,
+  resamples = cv_folds,
+  grid = lr_grid,
+  metrics = metric_set(accuracy, kap)
+)
+```
+
+------------------------------------------------------------------------
+
+## ✅ Step 9: Select Best Model
+
+We select the best combination of hyperparameters based on highest accuracy.
+
+```{r}
+best_params <- select_best(tune_results, metric = "accuracy")
+```
+
+------------------------------------------------------------------------
+
+## 🏗️ Step 10: Finalize and Train Model
+
+We finalize the workflow with the best hyperparameters and fit the model on the full training dataset.
+
+```{r}
+final_wf <- finalize_workflow(wf, best_params)
+final_fit <- final_wf %>% fit(data = train_data)
+```
+
+------------------------------------------------------------------------
+
+## 📈 Step 11: Predict and Evaluate on Test Set
+
+We generate predictions and evaluate them using accuracy and Kappa score.
+
+```{r}
+final_preds <- predict(final_fit, new_data = test_data) %>%
+  bind_cols(test_data)
+
+final_metrics <- metric_set(accuracy, kap)(final_preds, truth = label, estimate = .pred_class)
+final_metrics
+```
+
+------------------------------------------------------------------------
+
+## 📊 Step 12: Confusion Matrix
+
+We visualize model performance using a confusion matrix to understand misclassifications.
+
+```{r}
+conf_mat(final_preds, truth = label, estimate = .pred_class)
+```
+
+------------------------------------------------------------------------
+
+## ✅ Summary: How We Improved Prediction
+
+Compared to the earlier Random Forest approach, this model: - Used a **penalized logistic regression**, which is better suited for sparse high-dimensional data like TF-IDF - **Tuned regularization parameters**, improving generalization - **Used more features** (500 tokens vs. 100), capturing more context
+
+This workflow is more interpretable, efficient, and predictive for TF-IDF-based text classification.

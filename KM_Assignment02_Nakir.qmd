@@ -1,0 +1,125 @@
+---
+title: "Assignment 02"
+author: "Md Nakir Ahmed"
+format: html
+editor: visual
+---
+
+## 1) Lab 01 and Lab 02
+
+Please check the lab section to see **Lab 01** and **Lab 02**.
+
+------------------------------------------------------------------------
+
+## 2) Load and Explore the TEDS2016 Dataset
+
+```{r}
+library(haven)
+library(dplyr)
+library(ggplot2)
+library(car)
+
+TEDS_2016 <- read_stata("https://github.com/datageneration/home/blob/master/DataProgramming/data/TEDS_2016.dta?raw=true")
+head(TEDS_2016)
+str(TEDS_2016)
+summary(TEDS_2016)
+```
+
+------------------------------------------------------------------------
+
+## 3) Identify Problems with the Dataset
+
+We identified missing values in the dataset using `colSums(is.na(...))`. This tells us how many values are missing per column, which is important before running any models or summaries.
+
+```{r}
+colSums(is.na(TEDS_2016))
+```
+
+------------------------------------------------------------------------
+
+## 4) Handle Missing Values
+
+We used `na.omit()` to remove rows with missing values. This ensures we’re working with complete cases and helps prevent errors in analysis. After removal, we confirmed no missing values remain.
+
+```{r}
+TEDS_2016_cleaned <- na.omit(TEDS_2016)
+colSums(is.na(TEDS_2016_cleaned))
+```
+
+------------------------------------------------------------------------
+
+## 5) Explore Relationship Between Tondu and Other Variables
+
+We ran a linear regression to examine how **Tondu** is affected by predictors like **gender**, **party support (DPP)**, **age**, **income**, **education**, **ethnic identity**, and **economic perception**.
+
+The regression model helps quantify which variables have significant effects on Tondu.
+
+```{r}
+TEDS_2016_cleaned$female <- as.factor(TEDS_2016_cleaned$female)
+TEDS_2016_cleaned$DPP <- as.factor(TEDS_2016_cleaned$DPP)
+TEDS_2016_cleaned$Taiwanese <- as.factor(TEDS_2016_cleaned$Taiwanese)
+TEDS_2016_cleaned$Econ_worse <- as.factor(TEDS_2016_cleaned$Econ_worse)
+
+model <- lm(Tondu ~ female + DPP + age + income + edu + Taiwanese + Econ_worse, data = TEDS_2016_cleaned)
+summary(model)
+```
+
+### Visualization of Relationships
+
+We used boxplots to explore how the variable **Tondu** (support for unification or independence) varies by categorical variables such as **gender** and **DPP affiliation**.
+
+-   The first plot shows differences in Tondu scores between male and female respondents.
+-   The second plot compares Tondu scores for people who do or do not support the DPP.
+
+```{r}
+ggplot(TEDS_2016_cleaned, aes(x = female, y = Tondu, fill = female)) +
+  geom_boxplot() +
+  labs(title = "Tondu by Gender", x = "Female", y = "Tondu") +
+  theme_minimal()
+
+ggplot(TEDS_2016_cleaned, aes(x = DPP, y = Tondu, fill = DPP)) +
+  geom_boxplot() +
+  labs(title = "Tondu by DPP Affiliation", x = "DPP", y = "Tondu") +
+  theme_minimal()
+```
+
+------------------------------------------------------------------------
+
+## 6) Explore the votetsai Variable
+
+The variable `votetsai` shows whether a respondent voted for Tsai Ing-wen. A bar chart helps us understand how common support for Tsai is among the respondents.
+
+```{r}
+ggplot(na.omit(TEDS_2016_cleaned), aes(x = factor(votetsai))) +
+  geom_bar(fill = "steelblue") +
+  labs(title = "Distribution of votetsai", x = "Vote for Tsai Ing-wen", y = "Count") +
+  theme_minimal()
+
+```
+
+------------------------------------------------------------------------
+
+## 7) Frequency Table and Bar Chart for Tondu
+
+To better understand the distribution of political preferences in Taiwan, we recoded the numeric **Tondu** variable into labeled categories such as: - "Unification now", "Independence now", "Status quo forever", etc.
+
+Then we used a bar chart to display the frequency of each preference. This helps visually compare how common each political stance is in the dataset.
+
+```{r}
+TEDS_2016$Tondu <- factor(TEDS_2016$Tondu,
+                          labels = c("Unification now",
+                                     "Status quo, unif. in future",
+                                     "Status quo, decide later",
+                                     "Status quo forever",
+                                     "Status quo, indep. in future",
+                                     "Independence now",
+                                     "No response"))
+
+table(TEDS_2016$Tondu)
+
+ggplot(data.frame(Tondu = TEDS_2016$Tondu), aes(x = Tondu)) +
+  geom_bar(fill = "coral") +
+  theme_minimal() +
+  labs(title = "Bar Chart of Tondu Responses", x = "Tondu", y = "Count") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```

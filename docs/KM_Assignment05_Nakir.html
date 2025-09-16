@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>About – Md Nakir Ahmed</title>
+<title>Improving Text Classification with Penalized Logistic Regression – Md Nakir Ahmed</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -250,15 +250,34 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
 <!-- sidebar -->
 <!-- margin-sidebar -->
-    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar zindex-bottom">
-        
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#goal" id="toc-goal" class="nav-link active" data-scroll-target="#goal">🔍 Goal</a></li>
+  <li><a href="#step-1-load-required-libraries" id="toc-step-1-load-required-libraries" class="nav-link" data-scroll-target="#step-1-load-required-libraries">📥 Step 1: Load Required Libraries</a></li>
+  <li><a href="#step-2-load-and-prepare-the-data" id="toc-step-2-load-and-prepare-the-data" class="nav-link" data-scroll-target="#step-2-load-and-prepare-the-data">📄 Step 2: Load and Prepare the Data</a></li>
+  <li><a href="#step-3-text-preprocessing-with-tf-idf" id="toc-step-3-text-preprocessing-with-tf-idf" class="nav-link" data-scroll-target="#step-3-text-preprocessing-with-tf-idf">✂️ Step 3: Text Preprocessing with TF-IDF</a></li>
+  <li><a href="#step-4-define-penalized-logistic-regression-model" id="toc-step-4-define-penalized-logistic-regression-model" class="nav-link" data-scroll-target="#step-4-define-penalized-logistic-regression-model">🌲 Step 4: Define Penalized Logistic Regression Model</a></li>
+  <li><a href="#step-5-workflow-setup" id="toc-step-5-workflow-setup" class="nav-link" data-scroll-target="#step-5-workflow-setup">🔧 Step 5: Workflow Setup</a></li>
+  <li><a href="#step-6-cross-validation" id="toc-step-6-cross-validation" class="nav-link" data-scroll-target="#step-6-cross-validation">🔁 Step 6: Cross-Validation</a></li>
+  <li><a href="#step-7-define-hyperparameter-grid" id="toc-step-7-define-hyperparameter-grid" class="nav-link" data-scroll-target="#step-7-define-hyperparameter-grid">🎯 Step 7: Define Hyperparameter Grid</a></li>
+  <li><a href="#step-8-tune-the-model" id="toc-step-8-tune-the-model" class="nav-link" data-scroll-target="#step-8-tune-the-model">🔍 Step 8: Tune the Model</a></li>
+  <li><a href="#step-9-select-best-model" id="toc-step-9-select-best-model" class="nav-link" data-scroll-target="#step-9-select-best-model">✅ Step 9: Select Best Model</a></li>
+  <li><a href="#step-10-finalize-and-train-model" id="toc-step-10-finalize-and-train-model" class="nav-link" data-scroll-target="#step-10-finalize-and-train-model">🏗️ Step 10: Finalize and Train Model</a></li>
+  <li><a href="#step-11-predict-and-evaluate-on-test-set" id="toc-step-11-predict-and-evaluate-on-test-set" class="nav-link" data-scroll-target="#step-11-predict-and-evaluate-on-test-set">📈 Step 11: Predict and Evaluate on Test Set</a></li>
+  <li><a href="#step-12-confusion-matrix" id="toc-step-12-confusion-matrix" class="nav-link" data-scroll-target="#step-12-confusion-matrix">📊 Step 12: Confusion Matrix</a></li>
+  <li><a href="#summary-how-we-improved-prediction" id="toc-summary-how-we-improved-prediction" class="nav-link" data-scroll-target="#summary-how-we-improved-prediction">✅ Summary: How We Improved Prediction</a></li>
+  </ul>
+</nav>
     </div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">About</h1>
+<h1 class="title">Improving Text Classification with Penalized Logistic Regression</h1>
 </div>
 
 
@@ -275,15 +294,241 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 
-<p>About this site</p>
+<section id="goal" class="level2">
+<h2 class="anchored" data-anchor-id="goal">🔍 Goal</h2>
+<p>This analysis demonstrates how to <strong>improve prediction performance</strong> for a text classification task using TF-IDF features and a <strong>penalized logistic regression model</strong> (elastic net) in R.</p>
+<hr>
+</section>
+<section id="step-1-load-required-libraries" class="level2">
+<h2 class="anchored" data-anchor-id="step-1-load-required-libraries">📥 Step 1: Load Required Libraries</h2>
+<p>We load tidyverse tools for data manipulation, tidymodels for modeling, and textrecipes for text preprocessing.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="dv">1</span> <span class="sc">+</span> <span class="dv">1</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>── Attaching core tidyverse packages ──────────────────────── tidyverse 2.0.0 ──
+✔ dplyr     1.1.4     ✔ readr     2.1.5
+✔ forcats   1.0.0     ✔ stringr   1.5.1
+✔ ggplot2   3.5.2     ✔ tibble    3.2.1
+✔ lubridate 1.9.4     ✔ tidyr     1.3.1
+✔ purrr     1.0.4     
+── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
+✖ dplyr::filter() masks stats::filter()
+✖ dplyr::lag()    masks stats::lag()
+ℹ Use the conflicted package (&lt;http://conflicted.r-lib.org/&gt;) to force all conflicts to become errors</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidymodels)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>── Attaching packages ────────────────────────────────────── tidymodels 1.3.0 ──
+✔ broom        1.0.8     ✔ rsample      1.3.0
+✔ dials        1.4.0     ✔ tune         1.3.0
+✔ infer        1.0.8     ✔ workflows    1.2.0
+✔ modeldata    1.4.0     ✔ workflowsets 1.1.0
+✔ parsnip      1.3.1     ✔ yardstick    1.3.2
+✔ recipes      1.3.0     
+── Conflicts ───────────────────────────────────────── tidymodels_conflicts() ──
+✖ scales::discard() masks purrr::discard()
+✖ dplyr::filter()   masks stats::filter()
+✖ recipes::fixed()  masks stringr::fixed()
+✖ dplyr::lag()      masks stats::lag()
+✖ yardstick::spec() masks readr::spec()
+✖ recipes::step()   masks stats::step()</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(textrecipes)</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(workflows)</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(stopwords)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<hr>
+</section>
+<section id="step-2-load-and-prepare-the-data" class="level2">
+<h2 class="anchored" data-anchor-id="step-2-load-and-prepare-the-data">📄 Step 2: Load and Prepare the Data</h2>
+<p>We load a labeled corpus of 200 short documents and convert the target <code>label</code> to a factor for classification. We split the data 70/30 for training and testing.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>data <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="st">"https://raw.githubusercontent.com/datageneration/knowledgemining/refs/heads/master/data/km_sample_corpus_200.csv"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">label =</span> <span class="fu">factor</span>(label))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Rows: 200 Columns: 2
+── Column specification ────────────────────────────────────────────────────────
+Delimiter: ","
+chr (2): text, label
+
+ℹ Use `spec()` to retrieve the full column specification for this data.
+ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">123</span>)</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>split <span class="ot">&lt;-</span> <span class="fu">initial_split</span>(data, <span class="at">prop =</span> <span class="fl">0.7</span>, <span class="at">strata =</span> label)</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>train_data <span class="ot">&lt;-</span> <span class="fu">training</span>(split)</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>test_data  <span class="ot">&lt;-</span> <span class="fu">testing</span>(split)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<hr>
+</section>
+<section id="step-3-text-preprocessing-with-tf-idf" class="level2">
+<h2 class="anchored" data-anchor-id="step-3-text-preprocessing-with-tf-idf">✂️ Step 3: Text Preprocessing with TF-IDF</h2>
+<p>We create a recipe to: - Tokenize the text - Remove stopwords - Keep the 500 most frequent tokens - Convert tokens into TF-IDF weighted features</p>
+<p>This enriches the feature set and improves classification performance.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>rec <span class="ot">&lt;-</span> <span class="fu">recipe</span>(label <span class="sc">~</span> text, <span class="at">data =</span> train_data) <span class="sc">%&gt;%</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_tokenize</span>(text) <span class="sc">%&gt;%</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_stopwords</span>(text) <span class="sc">%&gt;%</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_tokenfilter</span>(text, <span class="at">max_tokens =</span> <span class="dv">500</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_tfidf</span>(text)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<hr>
+</section>
+<section id="step-4-define-penalized-logistic-regression-model" class="level2">
+<h2 class="anchored" data-anchor-id="step-4-define-penalized-logistic-regression-model">🌲 Step 4: Define Penalized Logistic Regression Model</h2>
+<p>We use <code>multinom_reg()</code> from <code>parsnip</code> with <code>glmnet</code> engine to perform logistic regression with elastic net regularization. The <code>penalty</code> (λ) and <code>mixture</code> (α) parameters will be tuned.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>lr_spec <span class="ot">&lt;-</span> <span class="fu">multinom_reg</span>(<span class="at">penalty =</span> <span class="fu">tune</span>(), <span class="at">mixture =</span> <span class="fu">tune</span>()) <span class="sc">%&gt;%</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_engine</span>(<span class="st">"glmnet"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_mode</span>(<span class="st">"classification"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<hr>
+</section>
+<section id="step-5-workflow-setup" class="level2">
+<h2 class="anchored" data-anchor-id="step-5-workflow-setup">🔧 Step 5: Workflow Setup</h2>
+<p>We combine the recipe and model into a single workflow, which simplifies the training and tuning process.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(workflows)</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>wf <span class="ot">&lt;-</span> <span class="fu">workflow</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">add_recipe</span>(rec) <span class="sc">%&gt;%</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">add_model</span>(lr_spec)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<hr>
+</section>
+<section id="step-6-cross-validation" class="level2">
+<h2 class="anchored" data-anchor-id="step-6-cross-validation">🔁 Step 6: Cross-Validation</h2>
+<p>We perform 5-fold cross-validation to robustly estimate model performance during tuning.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">123</span>)</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>cv_folds <span class="ot">&lt;-</span> <span class="fu">vfold_cv</span>(train_data, <span class="at">v =</span> <span class="dv">5</span>, <span class="at">strata =</span> label)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<hr>
+</section>
+<section id="step-7-define-hyperparameter-grid" class="level2">
+<h2 class="anchored" data-anchor-id="step-7-define-hyperparameter-grid">🎯 Step 7: Define Hyperparameter Grid</h2>
+<p>We define a grid of 25 combinations by varying: - <code>penalty</code>: strength of regularization (log scale from 10^-4 to 1) - <code>mixture</code>: 0 = ridge, 1 = lasso, in between = elastic net</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>lr_grid <span class="ot">&lt;-</span> <span class="fu">grid_regular</span>(</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">penalty</span>(<span class="at">range =</span> <span class="fu">c</span>(<span class="sc">-</span><span class="dv">4</span>, <span class="dv">0</span>)),</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mixture</span>(<span class="at">range =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">1</span>)),</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">levels =</span> <span class="dv">5</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<hr>
+</section>
+<section id="step-8-tune-the-model" class="level2">
+<h2 class="anchored" data-anchor-id="step-8-tune-the-model">🔍 Step 8: Tune the Model</h2>
+<p>We tune the model using the workflow and grid defined above. Accuracy and Kappa are used as metrics.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">123</span>)</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>tune_results <span class="ot">&lt;-</span> <span class="fu">tune_grid</span>(</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>  wf,</span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">resamples =</span> cv_folds,</span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">grid =</span> lr_grid,</span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">metrics =</span> <span class="fu">metric_set</span>(accuracy, kap)</span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>→ A | warning: max_tokens was set to 500, but only 131 was available and selected.</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>There were issues with some computations   A: x1</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>→ B | warning: max_tokens was set to 500, but only 133 was available and selected.</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>There were issues with some computations   A: x1
+There were issues with some computations   A: x1   B: x1
+→ C | warning: max_tokens was set to 500, but only 137 was available and selected.
+There were issues with some computations   A: x1   B: x1
+→ D | warning: max_tokens was set to 500, but only 132 was available and selected.
+There were issues with some computations   A: x1   B: x1
+There were issues with some computations   A: x1   B: x1   C: x1   D: x1
+There were issues with some computations   A: x1   B: x1   C: x2   D: x1</code></pre>
+</div>
+</div>
+<hr>
+</section>
+<section id="step-9-select-best-model" class="level2">
+<h2 class="anchored" data-anchor-id="step-9-select-best-model">✅ Step 9: Select Best Model</h2>
+<p>We select the best combination of hyperparameters based on highest accuracy.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>best_params <span class="ot">&lt;-</span> <span class="fu">select_best</span>(tune_results, <span class="at">metric =</span> <span class="st">"accuracy"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<hr>
+</section>
+<section id="step-10-finalize-and-train-model" class="level2">
+<h2 class="anchored" data-anchor-id="step-10-finalize-and-train-model">🏗️ Step 10: Finalize and Train Model</h2>
+<p>We finalize the workflow with the best hyperparameters and fit the model on the full training dataset.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>final_wf <span class="ot">&lt;-</span> <span class="fu">finalize_workflow</span>(wf, best_params)</span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>final_fit <span class="ot">&lt;-</span> final_wf <span class="sc">%&gt;%</span> <span class="fu">fit</span>(<span class="at">data =</span> train_data)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: max_tokens was set to 500, but only 137 was available and selected.</code></pre>
+</div>
+</div>
+<hr>
+</section>
+<section id="step-11-predict-and-evaluate-on-test-set" class="level2">
+<h2 class="anchored" data-anchor-id="step-11-predict-and-evaluate-on-test-set">📈 Step 11: Predict and Evaluate on Test Set</h2>
+<p>We generate predictions and evaluate them using accuracy and Kappa score.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>final_preds <span class="ot">&lt;-</span> <span class="fu">predict</span>(final_fit, <span class="at">new_data =</span> test_data) <span class="sc">%&gt;%</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">bind_cols</span>(test_data)</span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>final_metrics <span class="ot">&lt;-</span> <span class="fu">metric_set</span>(accuracy, kap)(final_preds, <span class="at">truth =</span> label, <span class="at">estimate =</span> .pred_class)</span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>final_metrics</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>[1] 2</code></pre>
+<pre><code># A tibble: 2 × 3
+  .metric  .estimator .estimate
+  &lt;chr&gt;    &lt;chr&gt;          &lt;dbl&gt;
+1 accuracy multiclass     0.95 
+2 kap      multiclass     0.944</code></pre>
 </div>
 </div>
+<hr>
+</section>
+<section id="step-12-confusion-matrix" class="level2">
+<h2 class="anchored" data-anchor-id="step-12-confusion-matrix">📊 Step 12: Confusion Matrix</h2>
+<p>We visualize model performance using a confusion matrix to understand misclassifications.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="fu">conf_mat</span>(final_preds, <span class="at">truth =</span> label, <span class="at">estimate =</span> .pred_class)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>               Truth
+Prediction      Culture Education Entertainment Environment Finance Health
+  Culture             6         0             0           0       0      0
+  Education           0         6             0           0       0      0
+  Entertainment       0         0             6           0       0      0
+  Environment         0         0             0           6       0      0
+  Finance             0         0             0           0       6      0
+  Health              0         0             0           0       0      6
+  Politics            0         0             0           0       0      0
+  Sports              0         0             0           0       0      0
+  Technology          0         0             0           0       0      0
+  Travel              0         0             0           0       0      0
+               Truth
+Prediction      Politics Sports Technology Travel
+  Culture              0      0          0      0
+  Education            3      0          0      0
+  Entertainment        0      0          0      0
+  Environment          0      0          0      0
+  Finance              0      0          0      0
+  Health               0      0          0      0
+  Politics             3      0          0      0
+  Sports               0      6          0      0
+  Technology           0      0          6      0
+  Travel               0      0          0      6</code></pre>
+</div>
+</div>
+<hr>
+</section>
+<section id="summary-how-we-improved-prediction" class="level2">
+<h2 class="anchored" data-anchor-id="summary-how-we-improved-prediction">✅ Summary: How We Improved Prediction</h2>
+<p>Compared to the earlier Random Forest approach, this model: - Used a <strong>penalized logistic regression</strong>, which is better suited for sparse high-dimensional data like TF-IDF - <strong>Tuned regularization parameters</strong>, improving generalization - <strong>Used more features</strong> (500 tokens vs.&nbsp;100), capturing more context</p>
+<p>This workflow is more interpretable, efficient, and predictive for TF-IDF-based text classification.</p>
 
 
+</section>
 
 </main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">
