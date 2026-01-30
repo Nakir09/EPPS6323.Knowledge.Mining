@@ -42,10 +42,6 @@ website:
             text: Lab 01
           - href: Lab02.qmd
             text: Lab 02
-      - text: "Workshops"
-        menu:
-          - href: workshops.qmd
-            text: Workshop Overview
       - text: "Final Project"
         menu:
           - text: "Final Project Proposal"

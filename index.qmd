@@ -1,9 +1,7 @@
 ---
-title: "Welcome"
+title: "EPPS 6323: Knowledge Mining"
 format: html
 ---
-
-# Welcome
 
 Welcome! I’m Nakir, a PhD candidate in Geospatial Information Sciences at The University of Texas at Dallas.
 
